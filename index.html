@@ -3,155 +3,295 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relatório de Constatação</title>
+<title>Relatório de Constatação – GeoGIS</title>
 
 <link rel="manifest" href="manifest.json">
 
 <style>
-body { font-family: Arial; background:#f2f2f2; padding:15px; }
-.container { background:#fff; padding:20px; max-width:900px; margin:auto; border-radius:8px; }
-label { font-weight:bold; margin-top:10px; display:block; }
-input, textarea, select, button { width:100%; padding:8px; margin-top:4px; }
-.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
-.hidden { display:none; }
-pre { background:#f9f9f9; padding:10px; white-space:pre-wrap; }
-canvas { border:1px solid #000; width:100%; height:150px; }
-button { background:#1f3c88; color:#fff; border:none; padding:10px; margin-top:10px; }
-.photos img { width:100px; height:100px; object-fit:cover; margin:5px; }
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f2f2f2;
+    padding: 15px;
+    margin: 0;
+}
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0,0,0,.12);
+}
+.header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+.header img {
+    max-width: 260px;
+    width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+.header h1 {
+    font-size: 22px;
+    margin: 5px 0;
+}
+.header p {
+    font-size: 14px;
+    color: #555;
+}
+label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+}
+input, textarea, select, button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+}
+textarea {
+    resize: vertical;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+.hidden {
+    display: none;
+}
+pre {
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    padding: 12px;
+    white-space: pre-wrap;
+    margin-top: 15px;
+}
+button {
+    background: #1f3c88;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-top: 12px;
+    cursor: pointer;
+}
+button.secondary {
+    background: #555;
+}
+.photos img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    margin: 5px;
+    border-radius: 5px;
+    border: 1px solid #aaa;
+}
+canvas {
+    border: 1px solid #000;
+    width: 100%;
+    height: 160px;
+    margin-top: 5px;
+}
+hr {
+    margin: 20px 0;
+}
 </style>
 </head>
 
 <body>
+
 <div class="container">
-<h1>Relatório de Constatação</h1>
+
+<!-- LOGO -->
+<div class="header">
+    <img src="logo.png" alt="GeoGIS">
+    <h1>Relatório de Constatação de Posse</h1>
+    <p>Sistema de Vistoria Técnica – Uso Offline</p>
+</div>
 
 <label>Tipo de Relatório</label>
 <select id="tipo" onchange="alternar()">
-<option value="contato">Com Contato</option>
-<option value="sem">Sem Contato</option>
+    <option value="contato">Constatação COM Contato</option>
+    <option value="sem">Constatação SEM Contato</option>
 </select>
+
+<hr>
 
 <h2>Dados do Lote</h2>
 <div class="grid">
-<input id="requerente" placeholder="Requerente">
-<input id="cidade" placeholder="Cidade">
-<input id="bairro" placeholder="Bairro">
-<input id="quadra" placeholder="Quadra">
-<input id="lote" placeholder="Lote">
+    <input id="requerente" placeholder="Nome da Requerente">
+    <input id="cidade" placeholder="Cidade">
+    <input id="bairro" placeholder="Bairro">
+    <input id="quadra" placeholder="Quadra">
+    <input id="lote" placeholder="Lote">
 </div>
 
+<!-- COM CONTATO -->
 <div id="contato">
-<h2>Dados Financeiros e Imóvel</h2>
+<hr>
+<h2>Dados Financeiros e do Imóvel</h2>
 <div class="grid">
-<input id="rendaBruta" placeholder="Renda Bruta">
-<input id="rendaFam" placeholder="Renda Familiar">
-<input id="comodos" placeholder="Nº de Cômodos">
-<input id="banheiros" placeholder="Nº de Banheiros">
+    <input id="rendaBruta" placeholder="Renda Bruta (R$)">
+    <input id="rendaFamiliar" placeholder="Renda Familiar (R$)">
+    <input id="comodos" placeholder="Nº de Cômodos">
+    <input id="banheiros" placeholder="Nº de Banheiros">
 </div>
 <label>Observação</label>
 <textarea id="obsContato"></textarea>
 </div>
 
+<!-- SEM CONTATO -->
 <div id="sem" class="hidden">
-<h2>Ocorrência</h2>
+<hr>
+<h2>Ocorrência – Sem Contato</h2>
 <label>Observação</label>
 <textarea id="obsSem"></textarea>
 </div>
 
+<hr>
+
 <h2>Localização</h2>
-<button onclick="obterLocal()">📍 Capturar Localização</button>
+<button onclick="capturarGPS()">📍 Capturar Localização</button>
 <p id="gps"></p>
 
-<h2>Fotos</h2>
-<input type="file" multiple accept="image/*" capture onchange="addFotos(this)">
+<hr>
+
+<h2>Registro Fotográfico</h2>
+<input type="file" multiple accept="image/*" capture="environment" onchange="addFotos(this)">
 <div class="photos" id="preview"></div>
 
-<h2>Assinatura</h2>
+<hr>
+
+<h2>Assinatura Digital</h2>
 <canvas id="assinatura"></canvas>
-<button onclick="limparAss()">Limpar Assinatura</button>
+<button class="secondary" onclick="limparAssinatura()">Limpar Assinatura</button>
+
+<hr>
 
 <h2>Entrevistador</h2>
 <div class="grid">
-<input id="entrevistador" placeholder="Nome">
-<input type="date" id="data">
+    <input id="entrevistador" placeholder="Nome do Entrevistador">
+    <input type="date" id="data">
 </div>
 
 <button onclick="gerar()">Gerar Relatório</button>
 <button onclick="salvar()">💾 Salvar Offline</button>
-<button onclick="compartilhar()">📤 Compartilhar</button>
+<button onclick="compartilhar()">📤 Compartilhar Texto + Fotos</button>
 
 <pre id="saida"></pre>
+
 </div>
 
 <script>
 let fotos = [];
-let gps = '';
+let gpsTexto = '';
 
-function alternar(){
-document.getElementById('contato').classList.toggle('hidden',tipo.value!=='contato');
-document.getElementById('sem').classList.toggle('hidden',tipo.value!=='sem');
+function alternar() {
+    const tipoSelecionado = document.getElementById('tipo').value;
+    const blocoContato = document.getElementById('contato');
+    const blocoSemContato = document.getElementById('sem');
+
+    if (tipoSelecionado === 'contato') {
+        blocoContato.classList.remove('hidden');
+        blocoSemContato.classList.add('hidden');
+    } else {
+        blocoContato.classList.add('hidden');
+        blocoSemContato.classList.remove('hidden');
+    }
 }
 
-function obterLocal(){
-navigator.geolocation.getCurrentPosition(p=>{
-gps = `Lat: ${p.coords.latitude}, Lng: ${p.coords.longitude}`;
-document.getElementById('gps').innerText = gps;
-});
+document.addEventListener('DOMContentLoaded', alternar);
+
+function capturarGPS() {
+    navigator.geolocation.getCurrentPosition(pos => {
+        gpsTexto = `Latitude: ${pos.coords.latitude}, Longitude: ${pos.coords.longitude}`;
+        document.getElementById('gps').innerText = gpsTexto;
+    }, () => alert('Não foi possível obter a localização'));
 }
 
-function addFotos(i){
-[...i.files].forEach(f=>{
-fotos.push(f);
-let img=document.createElement('img');
-img.src=URL.createObjectURL(f);
-preview.appendChild(img);
-});
+function addFotos(input) {
+    [...input.files].forEach(file => {
+        fotos.push(file);
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        preview.appendChild(img);
+    });
 }
 
-function gerar(){
-let t=`
+function gerar() {
+    let texto = `
 Requerente: ${requerente.value}
 Cidade: ${cidade.value}
 Bairro: ${bairro.value}
 Quadra: ${quadra.value}
 Lote: ${lote.value}
 
-Localização: ${gps}
-
+Localização: ${gpsTexto}
 `;
-if(tipo.value==='contato'){
-t+=`
+
+    if (tipo.value === 'contato') {
+        texto += `
 Renda Bruta: ${rendaBruta.value}
-Renda Familiar: ${rendaFam.value}
-Cômodos: ${comodos.value}
-Banheiros: ${banheiros.value}
+Renda Familiar: ${rendaFamiliar.value}
+Nº de Cômodos: ${comodos.value}
+Nº de Banheiros: ${banheiros.value}
 Observação: ${obsContato.value}
 `;
-}else{
-t+=`
+    } else {
+        texto += `
 Observação: ${obsSem.value}
 `;
-}
-t+=`
+    }
+
+    texto += `
 Entrevistador: ${entrevistador.value}
 Data: ${data.value}
+
+Registro fotográfico e assinatura em anexo.
 `;
-saida.textContent=t.trim();
+
+    saida.textContent = texto.trim();
 }
 
-function salvar(){
-let lista=JSON.parse(localStorage.getItem('relatorios')||'[]');
-lista.push(saida.textContent);
-localStorage.setItem('relatorios',JSON.stringify(lista));
-alert('Relatório salvo offline');
+function salvar() {
+    const lista = JSON.parse(localStorage.getItem('relatorios') || '[]');
+    lista.push(saida.textContent);
+    localStorage.setItem('relatorios', JSON.stringify(lista));
+    alert('Relatório salvo offline com sucesso');
 }
 
-async function compartilhar(){
-if(!navigator.share) return alert('Compartilhamento não suportado');
-await navigator.share({ text: saida.textContent, files: fotos });
+async function compartilhar() {
+    if (!navigator.share) {
+        alert('Compartilhamento não suportado neste dispositivo');
+        return;
+    }
+    await navigator.share({
+        title: 'Relatório de Constatação – GeoGIS',
+        text: saida.textContent,
+        files: fotos
+    });
 }
 
-function limparAss(){ctx.clearRect(0,0,c.width,c.height);}
+/* Assinatura */
+const canvas = document.getElementById('assinatura');
+const ctx = canvas.getContext('2d');
+let desenhando = false;
+
+canvas.addEventListener('mousedown', () => desenhando = true);
+canvas.addEventListener('mouseup', () => desenhando = false);
+canvas.addEventListener('mousemove', e => {
+    if (!desenhando) return;
+    ctx.lineWidth = 2;
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+});
+
+function limparAssinatura() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
 </script>
+
 </body>
 </html>
