@@ -3,197 +3,155 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relatório de Constatação de Posse</title>
+<title>Relatório de Constatação</title>
+
+<link rel="manifest" href="manifest.json">
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background: #f2f2f2;
-    padding: 20px;
-}
-.container {
-    max-width: 900px;
-    background: #fff;
-    padding: 20px;
-    margin: auto;
-    border-radius: 8px;
-}
-h1, h2 {
-    margin-bottom: 8px;
-}
-label {
-    font-weight: bold;
-    margin-top: 10px;
-    display: block;
-}
-input, select, textarea, button {
-    width: 100%;
-    padding: 8px;
-    margin-top: 4px;
-}
-textarea {
-    resize: vertical;
-}
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
-    gap: 10px;
-}
-button {
-    margin-top: 15px;
-    background: #1f3c88;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    font-weight: bold;
-}
-button.secondary {
-    background: #444;
-}
-.hidden {
-    display: none;
-}
-pre {
-    background: #f9f9f9;
-    border: 1px solid #ccc;
-    padding: 12px;
-    white-space: pre-wrap;
-}
-.photos {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-.photos img {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #aaa;
-}
+body { font-family: Arial; background:#f2f2f2; padding:15px; }
+.container { background:#fff; padding:20px; max-width:900px; margin:auto; border-radius:8px; }
+label { font-weight:bold; margin-top:10px; display:block; }
+input, textarea, select, button { width:100%; padding:8px; margin-top:4px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; }
+.hidden { display:none; }
+pre { background:#f9f9f9; padding:10px; white-space:pre-wrap; }
+canvas { border:1px solid #000; width:100%; height:150px; }
+button { background:#1f3c88; color:#fff; border:none; padding:10px; margin-top:10px; }
+.photos img { width:100px; height:100px; object-fit:cover; margin:5px; }
 </style>
 </head>
 
 <body>
-
 <div class="container">
-<h1>Relatório de Constatação de Posse</h1>
+<h1>Relatório de Constatação</h1>
 
 <label>Tipo de Relatório</label>
 <select id="tipo" onchange="alternar()">
-    <option value="contato">Com Contato</option>
-    <option value="sem">Sem Contato</option>
+<option value="contato">Com Contato</option>
+<option value="sem">Sem Contato</option>
 </select>
 
 <h2>Dados do Lote</h2>
 <div class="grid">
-    <input id="requerente" placeholder="Requerente">
-    <input id="cidade" placeholder="Cidade">
-    <input id="bairro" placeholder="Bairro">
-    <input id="quadra" placeholder="Quadra">
-    <input id="lote" placeholder="Lote">
+<input id="requerente" placeholder="Requerente">
+<input id="cidade" placeholder="Cidade">
+<input id="bairro" placeholder="Bairro">
+<input id="quadra" placeholder="Quadra">
+<input id="lote" placeholder="Lote">
 </div>
 
 <div id="contato">
-<h2>Entrevista</h2>
-<input id="aquisicao" placeholder="Forma de aquisição">
-<input id="tempo" placeholder="Tempo de posse">
-<textarea id="residentes" placeholder="Residentes"></textarea>
+<h2>Dados Financeiros e Imóvel</h2>
+<div class="grid">
+<input id="rendaBruta" placeholder="Renda Bruta">
+<input id="rendaFam" placeholder="Renda Familiar">
+<input id="comodos" placeholder="Nº de Cômodos">
+<input id="banheiros" placeholder="Nº de Banheiros">
+</div>
+<label>Observação</label>
+<textarea id="obsContato"></textarea>
 </div>
 
-<div id="semContato" class="hidden">
+<div id="sem" class="hidden">
 <h2>Ocorrência</h2>
-<input id="vizinha" placeholder="Vizinha contactada">
+<label>Observação</label>
+<textarea id="obsSem"></textarea>
 </div>
+
+<h2>Localização</h2>
+<button onclick="obterLocal()">📍 Capturar Localização</button>
+<p id="gps"></p>
+
+<h2>Fotos</h2>
+<input type="file" multiple accept="image/*" capture onchange="addFotos(this)">
+<div class="photos" id="preview"></div>
+
+<h2>Assinatura</h2>
+<canvas id="assinatura"></canvas>
+<button onclick="limparAss()">Limpar Assinatura</button>
 
 <h2>Entrevistador</h2>
 <div class="grid">
-    <input id="entrevistador" placeholder="Nome">
-    <input type="date" id="data">
+<input id="entrevistador" placeholder="Nome">
+<input type="date" id="data">
 </div>
 
-<h2>Registro Fotográfico</h2>
-<input type="file" accept="image/*" capture="environment" multiple onchange="addFotos(this)">
-<div class="photos" id="preview"></div>
-
 <button onclick="gerar()">Gerar Relatório</button>
+<button onclick="salvar()">💾 Salvar Offline</button>
+<button onclick="compartilhar()">📤 Compartilhar</button>
 
 <pre id="saida"></pre>
-
-<button class="secondary" onclick="compartilhar()">📤 Compartilhar Texto + Fotos</button>
 </div>
 
 <script>
-let imagens = [];
+let fotos = [];
+let gps = '';
 
-function alternar() {
-    const tipo = tipoRelatorio = document.getElementById('tipo').value;
-    document.getElementById('contato').classList.toggle('hidden', tipo !== 'contato');
-    document.getElementById('semContato').classList.toggle('hidden', tipo !== 'sem');
+function alternar(){
+document.getElementById('contato').classList.toggle('hidden',tipo.value!=='contato');
+document.getElementById('sem').classList.toggle('hidden',tipo.value!=='sem');
 }
 
-function addFotos(input) {
-    [...input.files].forEach(file => {
-        imagens.push(file);
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        document.getElementById('preview').appendChild(img);
-    });
+function obterLocal(){
+navigator.geolocation.getCurrentPosition(p=>{
+gps = `Lat: ${p.coords.latitude}, Lng: ${p.coords.longitude}`;
+document.getElementById('gps').innerText = gps;
+});
 }
 
-function gerar() {
-    const d = id => document.getElementById(id).value;
-    let texto = `
-Requerente: ${d('requerente')}
-Cidade: ${d('cidade')}
-Bairro: ${d('bairro')}
-Quadra: ${d('quadra')}
-Lote: ${d('lote')}
-
-O lote encontra-se dentro do partido urbanístico vigente.
-`;
-
-    if (document.getElementById('tipo').value === 'contato') {
-        texto += `
-Aquisição: ${d('aquisicao')}
-Tempo de posse: ${d('tempo')}
-Residentes: ${d('residentes')}
-`;
-    } else {
-        texto += `
-Durante a visita in loco não houve atendimento.
-Vizinha contactada: ${d('vizinha')}
-`;
-    }
-
-    texto += `
-Entrevistador: ${d('entrevistador')}
-Data: ${d('data')}
-
-Registro fotográfico anexo.
-`;
-
-    document.getElementById('saida').textContent = texto.trim();
+function addFotos(i){
+[...i.files].forEach(f=>{
+fotos.push(f);
+let img=document.createElement('img');
+img.src=URL.createObjectURL(f);
+preview.appendChild(img);
+});
 }
 
-async function compartilhar() {
-    const texto = document.getElementById('saida').textContent;
-    if (!navigator.share) {
-        alert("Compartilhamento não suportado neste dispositivo.");
-        return;
-    }
+function gerar(){
+let t=`
+Requerente: ${requerente.value}
+Cidade: ${cidade.value}
+Bairro: ${bairro.value}
+Quadra: ${quadra.value}
+Lote: ${lote.value}
 
-    try {
-        await navigator.share({
-            title: 'Relatório de Constatação',
-            text: texto,
-            files: imagens
-        });
-    } catch (e) {
-        console.log(e);
-    }
+Localização: ${gps}
+
+`;
+if(tipo.value==='contato'){
+t+=`
+Renda Bruta: ${rendaBruta.value}
+Renda Familiar: ${rendaFam.value}
+Cômodos: ${comodos.value}
+Banheiros: ${banheiros.value}
+Observação: ${obsContato.value}
+`;
+}else{
+t+=`
+Observação: ${obsSem.value}
+`;
 }
+t+=`
+Entrevistador: ${entrevistador.value}
+Data: ${data.value}
+`;
+saida.textContent=t.trim();
+}
+
+function salvar(){
+let lista=JSON.parse(localStorage.getItem('relatorios')||'[]');
+lista.push(saida.textContent);
+localStorage.setItem('relatorios',JSON.stringify(lista));
+alert('Relatório salvo offline');
+}
+
+async function compartilhar(){
+if(!navigator.share) return alert('Compartilhamento não suportado');
+await navigator.share({ text: saida.textContent, files: fotos });
+}
+
+function limparAss(){ctx.clearRect(0,0,c.width,c.height);}
 </script>
-
 </body>
 </html>
