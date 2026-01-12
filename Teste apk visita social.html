@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Constatação de Posse</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f2f2f2;
+    padding: 20px;
+}
+.container {
+    max-width: 900px;
+    background: #fff;
+    padding: 20px;
+    margin: auto;
+    border-radius: 8px;
+}
+h1, h2 {
+    margin-bottom: 8px;
+}
+label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+}
+input, select, textarea, button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+}
+textarea {
+    resize: vertical;
+}
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+    gap: 10px;
+}
+button {
+    margin-top: 15px;
+    background: #1f3c88;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+button.secondary {
+    background: #444;
+}
+.hidden {
+    display: none;
+}
+pre {
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    padding: 12px;
+    white-space: pre-wrap;
+}
+.photos {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.photos img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>Relatório de Constatação de Posse</h1>
+
+<label>Tipo de Relatório</label>
+<select id="tipo" onchange="alternar()">
+    <option value="contato">Com Contato</option>
+    <option value="sem">Sem Contato</option>
+</select>
+
+<h2>Dados do Lote</h2>
+<div class="grid">
+    <input id="requerente" placeholder="Requerente">
+    <input id="cidade" placeholder="Cidade">
+    <input id="bairro" placeholder="Bairro">
+    <input id="quadra" placeholder="Quadra">
+    <input id="lote" placeholder="Lote">
+</div>
+
+<div id="contato">
+<h2>Entrevista</h2>
+<input id="aquisicao" placeholder="Forma de aquisição">
+<input id="tempo" placeholder="Tempo de posse">
+<textarea id="residentes" placeholder="Residentes"></textarea>
+</div>
+
+<div id="semContato" class="hidden">
+<h2>Ocorrência</h2>
+<input id="vizinha" placeholder="Vizinha contactada">
+</div>
+
+<h2>Entrevistador</h2>
+<div class="grid">
+    <input id="entrevistador" placeholder="Nome">
+    <input type="date" id="data">
+</div>
+
+<h2>Registro Fotográfico</h2>
+<input type="file" accept="image/*" capture="environment" multiple onchange="addFotos(this)">
+<div class="photos" id="preview"></div>
+
+<button onclick="gerar()">Gerar Relatório</button>
+
+<pre id="saida"></pre>
+
+<button class="secondary" onclick="compartilhar()">📤 Compartilhar Texto + Fotos</button>
+</div>
+
+<script>
+let imagens = [];
+
+function alternar() {
+    const tipo = tipoRelatorio = document.getElementById('tipo').value;
+    document.getElementById('contato').classList.toggle('hidden', tipo !== 'contato');
+    document.getElementById('semContato').classList.toggle('hidden', tipo !== 'sem');
+}
+
+function addFotos(input) {
+    [...input.files].forEach(file => {
+        imagens.push(file);
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        document.getElementById('preview').appendChild(img);
+    });
+}
+
+function gerar() {
+    const d = id => document.getElementById(id).value;
+    let texto = `
+Requerente: ${d('requerente')}
+Cidade: ${d('cidade')}
+Bairro: ${d('bairro')}
+Quadra: ${d('quadra')}
+Lote: ${d('lote')}
+
+O lote encontra-se dentro do partido urbanístico vigente.
+`;
+
+    if (document.getElementById('tipo').value === 'contato') {
+        texto += `
+Aquisição: ${d('aquisicao')}
+Tempo de posse: ${d('tempo')}
+Residentes: ${d('residentes')}
+`;
+    } else {
+        texto += `
+Durante a visita in loco não houve atendimento.
+Vizinha contactada: ${d('vizinha')}
+`;
+    }
+
+    texto += `
+Entrevistador: ${d('entrevistador')}
+Data: ${d('data')}
+
+Registro fotográfico anexo.
+`;
+
+    document.getElementById('saida').textContent = texto.trim();
+}
+
+async function compartilhar() {
+    const texto = document.getElementById('saida').textContent;
+    if (!navigator.share) {
+        alert("Compartilhamento não suportado neste dispositivo.");
+        return;
+    }
+
+    try {
+        await navigator.share({
+            title: 'Relatório de Constatação',
+            text: texto,
+            files: imagens
+        });
+    } catch (e) {
+        console.log(e);
+    }
+}
+</script>
+
+</body>
+</html>
